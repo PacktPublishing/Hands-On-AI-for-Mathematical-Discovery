@@ -1492,4 +1492,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as error:
+        # Fail closed, but readably: the failure is already in the ledger.
+        print(f"STOPPED: {error}")
+        print("Rerun with --offline-literature for an explicit offline run.")
+        raise SystemExit(2)

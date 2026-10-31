@@ -1,75 +1,56 @@
-"""Small reference worker for the bounded Lean gate in Chapter 4."""
+"""SLURM worker for the Lean gate: checks one shard of a finite claim.
 
-from __future__ import annotations
+Each array task reads SLURM_ARRAY_TASK_ID, formalizes its sub-range of
+the claim, and writes a result file. Finished shards are skipped, so an
+interrupted array can simply be resubmitted.
 
+    python -m discovery_lab.worker --task lean-check
+"""
 import argparse
 import json
+import os
 from pathlib import Path
-import shutil
-import tempfile
 
-from . import (
-    Claim,
-    DiscoveryDatabase,
-    EvidenceLedger,
-    first_factor,
-    is_prime,
-    lean_check,
-)
+from .agents import Claim, LeanAgent
+from .cli import default_lean
+from .ledger import Ledger
+from .tools import lean_check
 
 
-def default_lean_command() -> str:
-    configured = shutil.which("lean")
-    toolchains = sorted(
-        (Path.home() / ".elan" / "toolchains").glob(
-            "leanprover--lean4---*/bin/lean"
-        )
-    )
-    return str(toolchains[-1]) if toolchains else (configured or "lean")
-
-
-def main() -> int:
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--task",
-        choices=("lean-check", "prime", "factor"),
-        required=True,
-    )
-    parser.add_argument("--value", type=int)
-    parser.add_argument("--constant", type=int, default=41)
-    parser.add_argument("--upper-exclusive", type=int, default=40)
-    parser.add_argument("--lean", default=default_lean_command())
+    parser.add_argument("--task", choices=("lean-check",), required=True)
+    parser.add_argument("--coeffs", default="1,1,41")
+    parser.add_argument("--upper", type=int, default=40)
+    parser.add_argument("--shard-size", type=int, default=10)
+    parser.add_argument("--out", default="artifacts/shards")
+    parser.add_argument("--lean", default=default_lean())
     args = parser.parse_args()
 
-    if args.task == "prime":
-        if args.value is None:
-            parser.error("--value is required for --task prime")
-        print(json.dumps({"value": args.value, "is_prime": is_prime(args.value)}))
+    shard = int(os.environ.get("SLURM_ARRAY_TASK_ID", "0"))
+    lo = shard * args.shard_size
+    hi = min(lo + args.shard_size, args.upper)
+    if lo >= hi:
+        print(f"shard {shard}: empty range, nothing to do")
         return 0
 
-    if args.task == "factor":
-        if args.value is None:
-            parser.error("--value is required for --task factor")
-        print(json.dumps({"value": args.value, "factor": first_factor(args.value)}))
+    out = Path(args.out) / f"shard-{shard:05d}.json"
+    if out.exists():
+        print(f"shard {shard}: already done ({out})")
         return 0
+    out.parent.mkdir(parents=True, exist_ok=True)
 
-    claim = Claim(
-        "worker-claim",
-        args.constant,
-        upper_exclusive=args.upper_exclusive,
-    )
-    with tempfile.TemporaryDirectory(prefix="chapter4-worker-") as directory:
-        database = DiscoveryDatabase(Path(directory) / "worker.sqlite3")
-        database.start_run("worker-run", {"task": "lean-check"})
-        ledger = EvidenceLedger(database, "worker-run")
-        result = lean_check(
-            claim,
-            args.lean,
-            ledger,
-            artifact_dir=Path(directory) / "artifacts",
-        )
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-        database.close()
+    coeffs = tuple(int(c) for c in args.coeffs.split(","))
+    claim = Claim(coeffs=coeffs, lo=lo, hi=hi, id=f"S{shard}")
+    result = lean_check(LeanAgent().formalize(claim), args.lean)
+
+    ledger = Ledger(str(out.with_suffix(".jsonl")))
+    ledger.record("worker", "lean-check", claim.id,
+                  statement=claim.text(), status=result["status"])
+    record = {"shard": shard, "lo": lo, "hi": hi,
+              "statement": claim.text(), "status": result["status"]}
+    out.write_text(json.dumps(record, indent=2))
+    print(json.dumps(record))
     return 0 if result["status"] == "checked" else 1
 
 

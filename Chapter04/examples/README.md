@@ -45,12 +45,19 @@ search established novelty.
 
 ## Commands
 
-From the `Chapter04_release` directory:
+From the `Chapter04` directory:
 
 ```bash
 python3 examples/discovery_loop.py
 python3 -m unittest discover -s examples -p 'test_*.py' -v
 python3 examples/end_to_end_discovery.py --model qwen3:0.6b
+```
+
+The Euler case and the Lean worker can also be run through the integrated engine:
+
+```bash
+python3 examples/run_euler_integrated.py --auto-approve
+python3 examples/integrated_worker.py --task lean-check
 ```
 
 To run the notebook, open `interactive_agentic_discovery.ipynb` in Jupyter or

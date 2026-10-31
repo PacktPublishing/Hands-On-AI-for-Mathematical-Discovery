@@ -11,3 +11,6 @@ __pycache__/
 artifacts/
 **/artifacts/
 
+
+# Ledger written by run_euler.py
+ledger.jsonl
