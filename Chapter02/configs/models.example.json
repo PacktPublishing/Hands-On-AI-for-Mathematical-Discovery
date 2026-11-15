@@ -1,0 +1,57 @@
+{
+  "models": [
+    {
+      "name": "qwen3-4b-ollama",
+      "note": "Laptop profile. Start the server with OLLAMA_CONTEXT_LENGTH=32768 ollama serve",
+      "backend": "openai",
+      "base_url": "http://localhost:11434/v1",
+      "model": "qwen3:4b",
+      "per_sample_seed": true,
+      "params": {"temperature": 0.6, "top_p": 0.95, "max_tokens": 16384}
+    },
+    {
+      "name": "gpt-oss-120b-vllm",
+      "note": "Cluster profile, served with slurm/bench_vllm.sbatch",
+      "backend": "openai",
+      "base_url": "http://localhost:8000/v1",
+      "model": "openai/gpt-oss-120b",
+      "per_sample_seed": true,
+      "params": {"temperature": 1.0, "top_p": 1.0, "max_tokens": 16384}
+    },
+    {
+      "name": "qwen3-vllm",
+      "note": "Any Qwen3 checkpoint served with vLLM; set model to the exact repository",
+      "backend": "openai",
+      "base_url": "http://localhost:8000/v1",
+      "model": "Qwen/Qwen3-32B",
+      "per_sample_seed": true,
+      "params": {"temperature": 0.6, "top_p": 0.95, "max_tokens": 16384}
+    },
+    {
+      "name": "openai-api",
+      "note": "Set model to a dated snapshot, not an alias",
+      "backend": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "model": "SET-ME",
+      "api_key_env": "OPENAI_API_KEY",
+      "params": {"max_completion_tokens": 16384}
+    },
+    {
+      "name": "anthropic-api",
+      "note": "Set model to a dated snapshot, not an alias",
+      "backend": "anthropic",
+      "model": "SET-ME",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "params": {"max_tokens": 16384}
+    },
+    {
+      "name": "gemini-api",
+      "note": "Gemini through its OpenAI-compatible endpoint",
+      "backend": "openai",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model": "SET-ME",
+      "api_key_env": "GEMINI_API_KEY",
+      "params": {}
+    }
+  ]
+}
