@@ -22,6 +22,7 @@ FUNCS = {
     "floor": sp.floor,
     "factorial": sp.factorial,
     "binomial": sp.binomial,
+    "comb": sp.binomial,
     "gamma": sp.gamma,
     "zeta": sp.zeta,
     "Rational": sp.Rational,
@@ -46,6 +47,7 @@ OPS = {
     ast.Sub: operator.sub,
     ast.Mult: operator.mul,
     ast.Div: operator.truediv,
+    ast.FloorDiv: lambda a, b: sp.floor(a / b),
     ast.Pow: _pow,
     ast.Mod: sp.Mod,
 }

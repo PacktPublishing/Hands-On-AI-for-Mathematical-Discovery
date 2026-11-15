@@ -1,5 +1,5 @@
-"""Model clients: one interface for vLLM, Ollama, hosted APIs,
-and replay."""
+"""Model clients: one interface for vLLM, Ollama, and hosted
+APIs."""
 
 import hashlib, json, os, time, urllib.error, urllib.request
 from dataclasses import dataclass, field
@@ -187,43 +187,6 @@ class AnthropicMessages:
 
     def describe(self):
         return {}
-
-
-class Replay:
-    """Answers from a recorded run. Never calls a model."""
-
-    def __init__(self, name, results_path):
-        self.name, self.model, self.per_sample_seed = (
-            name,
-            "replay",
-            True,
-        )
-        self.store = {}
-        with open(results_path) as f:
-            for line in f:
-                r = json.loads(line)
-                if r["model"] == name and "text" in r:
-                    self.store[r["request_key"]] = r
-
-    def complete(self, messages, seed=None):
-        key = request_key(self.name, messages, seed)
-        if key not in self.store:
-            raise ModelError(f"no recorded response for {key}")
-        r = self.store[key]
-        return Completion(
-            r["text"],
-            r.get("served_model", ""),
-            r.get("reasoning", ""),
-            r.get("finish", ""),
-            r.get("usage", {}),
-            r.get("seconds", 0.0),
-        )
-
-    def describe(self):
-        return {
-            "replay_of": self.name,
-            "responses": len(self.store),
-        }
 
 
 def make_client(cfg):

@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from harness.checks import check, check_chain, normalize_id
 from harness.consistency import vote
 from harness.families import generate
-from harness.models import OpenAICompatible, Replay
+from harness.models import OpenAICompatible
 from harness.parse import extract_json, to_sympy
 from harness.report import bootstrap, load, summarize
 from harness.run import load_tasks, main as run_main
@@ -83,6 +83,18 @@ class TestChecks(unittest.TestCase):
             self.assertEqual(
                 (v.status, v.reason), ("fail", reason), tid
             )
+
+    def test_python_forms_are_accepted(self):
+        for tid, answer in [
+            ("exp-cubes", "(n*(n+1)//2)**2"),
+            ("val-binsq", "comb(40, 20)"),
+        ]:
+            v = check(TASKS[tid], {"final_answer": answer})
+            self.assertEqual(v.status, "pass", tid)
+
+    def test_none_for_existing_work(self):
+        v = check(TASKS["ref-walters"], {"final_answer": "none"})
+        self.assertEqual(v.reason, "denied-existence")
 
     def test_witness_must_refute(self):
         v = check(
@@ -254,6 +266,23 @@ class TestEndToEnd(unittest.TestCase):
             )
             again = summarize(tasks, load(replay)["fake"])
             self.assertEqual(stats["per_task"], again["per_task"])
+            tampered = Path(tmp) / "tampered.jsonl"
+            rec = json.loads(lines[0])
+            rec["request_key"] = "0" * 16
+            tampered.write_text(json.dumps(rec) + "\n")
+            with self.assertRaises(ValueError):
+                run_main(
+                    [
+                        "--replay",
+                        str(tampered),
+                        "--tasks",
+                        str(ROOT / "tasks/core.jsonl"),
+                        "--families",
+                        "1",
+                        "--out",
+                        str(Path(tmp) / "t"),
+                    ]
+                )
 
 
 if __name__ == "__main__":

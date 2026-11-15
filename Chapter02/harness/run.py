@@ -8,7 +8,7 @@ import sympy as sp
 from . import __version__
 from .checks import Verdict, check, check_chain
 from .families import generate
-from .models import ModelError, Replay, make_client, request_key
+from .models import ModelError, make_client, request_key
 from .parse import extract_json
 from .prompts import PROMPT_VERSION, build_messages, prompt_sha
 
@@ -68,6 +68,39 @@ def grade(task, rec):
     return rec
 
 
+def regrade(paths, by_id, out, models=None):
+    """Grade recorded responses again. No model is called."""
+    count = 0
+    with open(out / "results.jsonl", "w") as g:
+        for path in paths:
+            with open(path) as f:
+                records = [json.loads(line) for line in f]
+            for rec in records:
+                if models and rec["model"] not in models:
+                    continue
+                task = by_id[rec["task"]]
+                messages = build_messages(task)
+                key = request_key(
+                    rec["model"], messages, rec["seed"]
+                )
+                if key != rec["request_key"]:
+                    raise ValueError(
+                        f"{rec['task']}: prompt or task has changed "
+                        "since the response was recorded"
+                    )
+                for field in (
+                    "parsed",
+                    "valid_json",
+                    "verdict",
+                    "chain_break",
+                ):
+                    rec.pop(field, None)
+                rec = grade(task, rec)
+                g.write(json.dumps(rec, default=str) + "\n")
+                count += 1
+    print(f"re-graded {count} recorded responses")
+
+
 def write_manifest(out, args, tasks, clients):
     tasks_blob = json.dumps(tasks, sort_keys=True).encode()
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -85,6 +118,7 @@ def write_manifest(out, args, tasks, clients):
         "python": platform.python_version(),
         "sympy": sp.__version__,
         "argv": sys.argv[1:],
+        "replay_of": args.replay,
         "models": [
             {
                 "name": c.name,
@@ -124,8 +158,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument(
         "--replay",
-        help="results.jsonl of an earlier run; "
-        "re-grade it without calling any model",
+        nargs="+",
+        help="results.jsonl files of earlier runs; "
+        "re-grade them without calling any model",
     )
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
@@ -137,23 +172,16 @@ def main(argv=None):
     )
     by_id = {t["id"]: t for t in tasks}
     if args.replay:
-        with open(args.replay) as f:
-            names = sorted(
-                {json.loads(line)["model"] for line in f}
-            )
-        clients = [
-            Replay(n, args.replay)
-            for n in names
-            if not args.models or n in args.models
-        ]
-    else:
-        with open(args.config) as f:
-            configs = json.load(f)["models"]
-        clients = [
-            make_client(c)
-            for c in configs
-            if not args.models or c["name"] in args.models
-        ]
+        write_manifest(out, args, tasks, [])
+        regrade(args.replay, by_id, out, args.models)
+        return
+    with open(args.config) as f:
+        configs = json.load(f)["models"]
+    clients = [
+        make_client(c)
+        for c in configs
+        if not args.models or c["name"] in args.models
+    ]
     write_manifest(out, args, tasks, clients)
 
     results, done = out / "results.jsonl", set()

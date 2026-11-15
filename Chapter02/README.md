@@ -17,7 +17,7 @@ Companion code for Chapter 2 of *Hands-On AI for Mathematical Discovery*.
 | `tasks/core.jsonl` | 62 hand-written tasks, each probing one failure mode. |
 | `configs/models.example.json` | Example endpoints: Ollama, vLLM, OpenAI, Anthropic, Gemini. |
 | `slurm/bench_vllm.sbatch` | Serve a model with vLLM on a GPU node and benchmark it. |
-| `runs/` | Recorded runs from the chapter. Re-grade them offline with `--replay`. |
+| `runs/` | Recorded runs from the chapter (see below). Re-grade them offline with `--replay`. |
 | `tests/` | Tests; they use a local fake endpoint and need no model. |
 
 ## Quick start
@@ -28,13 +28,23 @@ python3 -m unittest discover -s tests -v
 cp configs/models.example.json configs/models.json   # then edit
 ```
 
-Re-grade a recorded run without any model or network access:
+Re-grade the recorded runs without any model or network access:
 
 ```bash
-python3 -m harness.run --replay runs/<run>/results.jsonl \
+python3 -m harness.run --replay \
+    runs/2026-11-15-gpt-oss-120b-vllm/results.jsonl \
+    runs/2026-11-15-qwen3-vllm/results.jsonl \
     --out runs/regraded
 python3 -m harness.report runs/regraded
 ```
+
+## Recorded runs
+
+| Folder | Content |
+|---|---|
+| `runs/2026-11-15-gpt-oss-120b-vllm/` | `openai/gpt-oss-120b`, vLLM 0.33.0, one 96 GB RTX PRO 6000 Blackwell, 5 samples per task. Graded with harness 2.0.0. |
+| `runs/2026-11-15-qwen3-vllm/` | `Qwen/Qwen3-32B`, same setup. Graded with harness 2.0.0, whose parser did not yet accept `//` and `comb`. |
+| `runs/2026-11-15-regraded/` | Both runs re-graded from the recordings with harness 2.1.0. These are the numbers in the chapter. |
 
 ## Running against models
 

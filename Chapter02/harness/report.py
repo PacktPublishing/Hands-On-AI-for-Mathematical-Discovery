@@ -90,10 +90,14 @@ def summarize(tasks, per_task):
     chain = [
         r for r in samples if passed(r) and "chain_break" in r
     ]
-    s["right_answer_broken_chain"] = (
-        sum(r["chain_break"] is not None for r in chain),
-        len(chain),
+    breaks = Counter(
+        r["chain_break"][1] for r in chain if r["chain_break"]
     )
+    s["right_answer_chain"] = {
+        "checked": len(chain),
+        "invalid-step": breaks["not-equal"],
+        "steps-not-expressions": breaks["unreadable"],
+    }
     pairs = defaultdict(dict)
     for t, a in acc.items():
         if "pair" in by_id[t]:
@@ -200,8 +204,8 @@ def main(argv=None):
             f"- majority accuracy at agreement >= 0.8: "
             f"{s.get('acc_high_agreement')}, below: "
             f"{s.get('acc_low_agreement')}",
-            f"- right answer but broken step chain: "
-            f"{s['right_answer_broken_chain']}",
+            f"- step chains behind right answers: "
+            f"{s['right_answer_chain']}",
             f"- distractor gap (plain - distractor): "
             f"{s.get('distractor_gap')}",
             f"- mean output tokens: {s['mean_output_tokens']:.0f}",

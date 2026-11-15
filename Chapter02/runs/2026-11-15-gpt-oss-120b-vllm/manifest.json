@@ -1,0 +1,64 @@
+{
+  "created": "2026-11-15T14:03:51+00:00",
+  "harness": "2.0.0",
+  "prompt": "ch2-v1",
+  "prompt_sha": "788fe6710cd9f084",
+  "tasks_sha": "1d125177c3fa34b9",
+  "n_tasks": 86,
+  "samples": 5,
+  "seed": 0,
+  "families": 4,
+  "family_seed": 2026,
+  "python": "3.12.16",
+  "sympy": "1.14.0",
+  "argv": [
+    "--config",
+    "configs/models.json",
+    "--models",
+    "gpt-oss-120b-vllm",
+    "--samples",
+    "5",
+    "--workers",
+    "16",
+    "--out",
+    "runs/2026-11-15-gpt-oss-120b-vllm"
+  ],
+  "models": [
+    {
+      "name": "gpt-oss-120b-vllm",
+      "model": "openai/gpt-oss-120b",
+      "endpoint": "http://localhost:8000/v1",
+      "params": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "max_tokens": 16384
+      },
+      "per_sample_seed": true,
+      "served": {
+        "id": "openai/gpt-oss-120b",
+        "object": "model",
+        "created": 1794751431,
+        "owned_by": "vllm",
+        "root": "openai/gpt-oss-120b",
+        "parent": null,
+        "max_model_len": 32768,
+        "permission": [
+          {
+            "id": "modelperm-9dd3d6d6667255b6",
+            "object": "model_permission",
+            "created": 1794751431,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    }
+  ]
+}

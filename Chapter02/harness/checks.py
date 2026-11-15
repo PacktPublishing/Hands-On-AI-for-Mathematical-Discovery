@@ -278,6 +278,13 @@ def check_reference(task, answer, rng):
     got, want = normalize_id(answer), normalize_id(task["answer"])
     if got == want:
         return Verdict("pass", "match")
+    if got == "none":
+        return Verdict(
+            "fail",
+            "match",
+            "denied-existence",
+            f"answered none; the work is {task['answer']}",
+        )
     if want == "none":
         return Verdict(
             "fail",

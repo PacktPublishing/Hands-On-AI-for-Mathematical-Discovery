@@ -4,11 +4,13 @@
 #SBATCH --partition=gpu          # your GPU partition
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --time=08:00:00
+#SBATCH --dependency=singleton    # one benchmark at a time (port 8000)
 #SBATCH --output=logs/%x-%j.out
 
 set -euo pipefail
+export PYTHONUNBUFFERED=1            # progress appears in the log at once
 MODEL=${MODEL:-openai/gpt-oss-120b}     # Hugging Face repository
 NAME=${NAME:-gpt-oss-120b-vllm}         # entry in configs/models.json
 PORT=${PORT:-8000}
