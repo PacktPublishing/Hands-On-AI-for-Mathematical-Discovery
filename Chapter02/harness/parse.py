@@ -23,6 +23,7 @@ FUNCS = {
     "factorial": sp.factorial,
     "binomial": sp.binomial,
     "comb": sp.binomial,
+    "catalan": sp.catalan,
     "gamma": sp.gamma,
     "zeta": sp.zeta,
     "Rational": sp.Rational,
@@ -137,7 +138,8 @@ def extract_json(text):
             continue
     m = re.search(r"final[ _]answer\W*(.+)", text, re.I)
     if m:
-        return {
-            "final_answer": m.group(1).strip().strip('"')
-        }, False
+        answer = (
+            m.group(1).strip().rstrip(",}").strip().strip('"')
+        )
+        return {"final_answer": answer}, False
     return None, False

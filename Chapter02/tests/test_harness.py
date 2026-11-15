@@ -92,6 +92,10 @@ class TestChecks(unittest.TestCase):
             v = check(TASKS[tid], {"final_answer": answer})
             self.assertEqual(v.status, "pass", tid)
 
+    def test_none_for_existing_counterexample(self):
+        v = check(TASKS["cex-cyclo"], {"final_answer": "none"})
+        self.assertEqual(v.reason, "missed-counterexample")
+
     def test_none_for_existing_work(self):
         v = check(TASKS["ref-walters"], {"final_answer": "none"})
         self.assertEqual(v.reason, "denied-existence")

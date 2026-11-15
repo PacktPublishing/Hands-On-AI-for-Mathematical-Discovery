@@ -1,6 +1,6 @@
 {
-  "created": "2026-11-15T15:40:11+00:00",
-  "harness": "2.1.0",
+  "created": "2026-11-15T16:16:40+00:00",
+  "harness": "2.2.0",
   "prompt": "ch2-v1",
   "prompt_sha": "788fe6710cd9f084",
   "tasks_sha": "1d125177c3fa34b9",
@@ -15,12 +15,14 @@
     "--replay",
     "runs/2026-11-15-gpt-oss-120b-vllm/results.jsonl",
     "runs/2026-11-15-qwen3-vllm/results.jsonl",
+    "runs/2026-11-15-qwen3-4b-vllm/results.jsonl",
     "--out",
     "runs/2026-11-15-regraded"
   ],
   "replay_of": [
     "runs/2026-11-15-gpt-oss-120b-vllm/results.jsonl",
-    "runs/2026-11-15-qwen3-vllm/results.jsonl"
+    "runs/2026-11-15-qwen3-vllm/results.jsonl",
+    "runs/2026-11-15-qwen3-4b-vllm/results.jsonl"
   ],
   "models": []
 }

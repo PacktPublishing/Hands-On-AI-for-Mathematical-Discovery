@@ -1,0 +1,64 @@
+{
+  "created": "2026-11-15T16:02:49+00:00",
+  "harness": "2.0.0",
+  "prompt": "ch2-v1",
+  "prompt_sha": "788fe6710cd9f084",
+  "tasks_sha": "1d125177c3fa34b9",
+  "n_tasks": 86,
+  "samples": 5,
+  "seed": 0,
+  "families": 4,
+  "family_seed": 2026,
+  "python": "3.12.16",
+  "sympy": "1.14.0",
+  "argv": [
+    "--config",
+    "configs/models.json",
+    "--models",
+    "qwen3-4b-vllm",
+    "--samples",
+    "5",
+    "--workers",
+    "16",
+    "--out",
+    "runs/2026-11-15-qwen3-4b-vllm"
+  ],
+  "models": [
+    {
+      "name": "qwen3-4b-vllm",
+      "model": "Qwen/Qwen3-4B",
+      "endpoint": "http://localhost:8000/v1",
+      "params": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "max_tokens": 16384
+      },
+      "per_sample_seed": true,
+      "served": {
+        "id": "Qwen/Qwen3-4B",
+        "object": "model",
+        "created": 1794758569,
+        "owned_by": "vllm",
+        "root": "Qwen/Qwen3-4B",
+        "parent": null,
+        "max_model_len": 32768,
+        "permission": [
+          {
+            "id": "modelperm-b6b4e49fed75cbb2",
+            "object": "model_permission",
+            "created": 1794758569,
+            "allow_create_engine": false,
+            "allow_sampling": true,
+            "allow_logprobs": true,
+            "allow_search_indices": false,
+            "allow_view": true,
+            "allow_fine_tuning": false,
+            "organization": "*",
+            "group": null,
+            "is_blocking": false
+          }
+        ]
+      }
+    }
+  ]
+}

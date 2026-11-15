@@ -34,6 +34,7 @@ Re-grade the recorded runs without any model or network access:
 python3 -m harness.run --replay \
     runs/2026-11-15-gpt-oss-120b-vllm/results.jsonl \
     runs/2026-11-15-qwen3-vllm/results.jsonl \
+    runs/2026-11-15-qwen3-4b-vllm/results.jsonl \
     --out runs/regraded
 python3 -m harness.report runs/regraded
 ```
@@ -42,9 +43,10 @@ python3 -m harness.report runs/regraded
 
 | Folder | Content |
 |---|---|
-| `runs/2026-11-15-gpt-oss-120b-vllm/` | `openai/gpt-oss-120b`, vLLM 0.33.0, one 96 GB RTX PRO 6000 Blackwell, 5 samples per task. Graded with harness 2.0.0. |
-| `runs/2026-11-15-qwen3-vllm/` | `Qwen/Qwen3-32B`, same setup. Graded with harness 2.0.0, whose parser did not yet accept `//` and `comb`. |
-| `runs/2026-11-15-regraded/` | Both runs re-graded from the recordings with harness 2.1.0. These are the numbers in the chapter. |
+| `runs/2026-11-15-gpt-oss-120b-vllm/` | `openai/gpt-oss-120b`, vLLM 0.33.0, one 96 GB RTX PRO 6000 Blackwell, 5 samples per task. Graded with harness 2.0.0; `report.md` includes the `--resolve` check. |
+| `runs/2026-11-15-qwen3-vllm/` | `Qwen/Qwen3-32B`, same setup and grading; `report.md` includes the `--resolve` check. |
+| `runs/2026-11-15-qwen3-4b-vllm/` | `Qwen/Qwen3-4B`, same setup and grading. |
+| `runs/2026-11-15-regraded/` | All three runs re-graded from the recordings with harness 2.2.0, which accepts `//`, `comb`, and `catalan` and classifies "none" answers. These are the numbers in the chapter. |
 
 ## Running against models
 

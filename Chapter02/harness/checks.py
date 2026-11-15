@@ -198,6 +198,13 @@ def check_counterexample(task, answer, rng):
             "overclaim",
             f"claimed {answer}; no such number is known",
         )
+    if answer.lower() == "none":
+        return Verdict(
+            "fail",
+            "match",
+            "missed-counterexample",
+            f"answered none; {task['answer']} has the property",
+        )
     try:
         n = _integer(answer)
     except (ValueError, SyntaxError, TypeError):
