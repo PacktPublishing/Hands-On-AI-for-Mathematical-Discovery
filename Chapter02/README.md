@@ -48,6 +48,10 @@ python3 -m harness.report runs/regraded
 | `runs/2026-11-15-qwen3-4b-vllm/` | `Qwen/Qwen3-4B`, same setup and grading. |
 | `runs/2026-11-15-regraded/` | All three runs re-graded from the recordings with harness 2.2.0, which accepts `//`, `comb`, and `catalan` and classifies "none" answers. These are the numbers in the chapter. |
 
+The runs were computed on the Research Computing Infrastructure of EDIH Hamburg
+(SLURM, GPU partition with NVIDIA L40 and RTX PRO 6000 Blackwell nodes), one 96 GB
+RTX PRO 6000 Blackwell GPU, 16 CPU cores, and 128 GB of memory per job.
+
 ## Running against models
 
 Laptop, with Ollama:
