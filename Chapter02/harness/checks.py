@@ -29,6 +29,9 @@ def time_limit(seconds):
     def handler(signum, frame):
         raise TimeoutError
 
+    if not hasattr(signal, "SIGALRM"):  # Windows: no time limit
+        yield
+        return
     try:
         old = signal.signal(signal.SIGALRM, handler)
     except ValueError:  # not in the main thread

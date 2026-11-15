@@ -175,7 +175,7 @@ def main(argv=None):
         write_manifest(out, args, tasks, [])
         regrade(args.replay, by_id, out, args.models)
         return
-    with open(args.config) as f:
+    with open(args.config, encoding="utf-8-sig") as f:
         configs = json.load(f)["models"]
     clients = [
         make_client(c)
