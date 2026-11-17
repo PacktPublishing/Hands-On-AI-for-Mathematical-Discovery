@@ -80,6 +80,43 @@ def collatz_divergent(n, max_steps=10**6):
     )
 
 
+def goldbach_split(n, limit=10**6):
+    """Primes (p, n - p) with p <= limit, or None if there are none."""
+    for p in range(2, min(n // 2, limit) + 1):
+        if isprime(p) and isprime(n - p):
+            return p, n - p
+    return None
+
+
+def collatz_steps(n, max_steps=10**6):
+    """Steps until the trajectory of n reaches 1, or None."""
+    for k in range(max_steps):
+        if n == 1:
+            return k
+        n = n // 2 if n % 2 == 0 else 3 * n + 1
+    return None
+
+
+def refute_goldbach(n):
+    """Why n is not a counterexample; None if undecided."""
+    if n <= 2 or n % 2:
+        return f"{n} is not an even integer greater than 2"
+    split = goldbach_split(n)
+    return f"{n} = {split[0]} + {split[1]}" if split else None
+
+
+def refute_collatz(n):
+    """Why n is not a counterexample; None if undecided."""
+    if n < 1:
+        return f"{n} is not a positive integer"
+    k = collatz_steps(n)
+    return (
+        f"{n} reaches 1 after {k} steps"
+        if k is not None
+        else None
+    )
+
+
 def square_root_counterexample(w):
     a, b, n = w
     return (
@@ -121,4 +158,9 @@ PROPERTIES = {
         quadratic_composite_41,
         divides_fermat5,
     )
+}
+
+REFUTERS = {  # open problems whose candidates can be checked
+    "goldbach_violation": refute_goldbach,
+    "collatz_divergent": refute_collatz,
 }

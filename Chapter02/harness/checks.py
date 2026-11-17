@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, asdict
 import sympy as sp
 from .parse import to_sympy, normalize
-from .properties import PROPERTIES
+from .properties import PROPERTIES, REFUTERS
 
 SPECIAL = {"diverges", "none", "true", "false"}
 
@@ -80,9 +80,46 @@ def sample_points(domain, rng, k=8):
     ]
 
 
+REGIONS = {
+    "real": sp.S.Reals,
+    "nonzero_real": sp.S.Reals - sp.FiniteSet(0),
+    "positive": sp.Interval.open(0, sp.oo),
+    "positive_integer": sp.S.Naturals,
+    "nonnegative_integer": sp.S.Naturals0,
+    "integer": sp.S.Integers,
+}
+
+
+def poles(expr, domain):
+    """Points of a one-variable domain where expr, as written,
+    divides by zero. Simplification would hide them."""
+    if len(domain) != 1:
+        return []
+    ((name, kind),) = domain.items()
+    x, found = sp.Symbol(name), set()
+    try:
+        with time_limit(10):
+            for p in expr.atoms(sp.Pow):
+                if p.exp.is_negative:
+                    zeros = sp.solveset(p.base, x, sp.S.Reals)
+                    if isinstance(zeros, sp.FiniteSet):
+                        found |= set(zeros)
+    except TimeoutError:
+        pass
+    inside = [
+        z for z in found if REGIONS[kind].contains(z) == True
+    ]
+    return [{x: z} for z in sorted(inside, key=str)]
+
+
 def equivalent(a, b, domain, rng, digits=40):
-    """('exact'|'numeric', None) if a == b on the domain, else
-    ('differ', witness point)."""
+    """('exact'|'numeric', None) if a equals the reference b on the
+    domain, else ('differ', witness point)."""
+    for pt in poles(a, domain):  # a undefined where b is defined
+        if sp.N(b.subs(pt), digits).is_finite:
+            return "differ", {
+                str(k): str(v) for k, v in pt.items()
+            }
     try:
         with time_limit(10):
             if sp.simplify(a - b) == 0:
@@ -93,9 +130,7 @@ def equivalent(a, b, domain, rng, digits=40):
     for pt in points:
         va = sp.N(a.subs(pt), digits)
         vb = sp.N(b.subs(pt), digits)
-        if (
-            not vb.is_finite
-        ):  # point outside the reference's domain
+        if not vb.is_finite:  # outside the reference's domain
             continue
         if not va.is_finite or abs(va - vb) > sp.Float(10) ** (
             5 - digits
@@ -189,18 +224,41 @@ def _integer(answer):
     return int(value)
 
 
-def check_counterexample(task, answer, rng):
-    has = PROPERTIES[task["property"]]
-    params = task.get("params", {})
-    if task["answer"] == "none":
-        if answer.lower() == "none":
-            return Verdict("pass", "match")
+def check_open_problem(task, answer):
+    """A candidate for a problem nobody has solved (reference answer
+    none): refute it if we can; never accept it automatically."""
+    if answer.lower() == "none":
+        return Verdict("pass", "match")
+    try:
+        n = _integer(answer)
+    except (ValueError, SyntaxError, TypeError):
+        return Verdict(
+            "unparseable", reason="format", detail=answer[:80]
+        )
+    refute = REFUTERS.get(task["property"])
+    if refute is None:
         return Verdict(
             "fail",
-            "property",
+            "match",
             "overclaim",
-            f"claimed {answer}; no such number is known",
+            f"claimed {n}; compared with the reference none only",
         )
+    why = refute(n)
+    if why is None:
+        return Verdict(
+            "inconclusive",
+            "property",
+            "undecided",
+            f"claimed {n}; not refuted within the budget",
+        )
+    return Verdict("fail", "property", "overclaim", why)
+
+
+def check_counterexample(task, answer, rng):
+    if task["answer"] == "none":
+        return check_open_problem(task, answer)
+    has = PROPERTIES[task["property"]]
+    params = task.get("params", {})
     if answer.lower() == "none":
         return Verdict(
             "fail",
@@ -335,21 +393,26 @@ def check(task, parsed, seed=0):
         return Verdict("inconclusive", reason="timeout")
 
 
-def check_chain(task, steps, seed=0):
-    """First step (1-based) that is unreadable or differs from its
-    predecessor on the domain, as (step, why); None if all hold.
-    """
+def check_chain(task, steps, final, seed=0):
+    """Follow the steps from the task's start to the final answer.
+    Returns (status, step): complete, not-checked (no steps),
+    unreadable, not-equal, or wrong-end (the final answer does not
+    follow from the last step); step is 1-based, or None."""
+    if not isinstance(steps, list) or not steps:
+        return "not-checked", None
     domain, rng = task.get("domain", {}), random.Random(seed)
     previous = to_sympy(task["start"], domain)
-    for i, step in enumerate(steps, 1):
+    for i, step in enumerate([*steps, final], 1):
         try:
             current = to_sympy(str(step), domain)
         except (ValueError, SyntaxError, TypeError):
-            return i, "unreadable"
+            return "unreadable", i
         if (
             equivalent(current, previous, domain, rng)[0]
             == "differ"
         ):
-            return i, "not-equal"
+            return (
+                "not-equal" if i <= len(steps) else "wrong-end"
+            ), i
         previous = current
-    return None
+    return "complete", None

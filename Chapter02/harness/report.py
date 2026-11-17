@@ -48,10 +48,16 @@ def summarize(tasks, per_task):
     sc, agree = {}, {}
     for t, rs in per_task.items():
         if len(rs) >= 3:
-            winner, agreement = vote(
+            majority, agreement = vote(
                 by_id[t], [r.get("parsed") for r in rs]
             )
-            sc[t] = winner is not None and passed(rs[winner])
+            # a tie counts as a random pick among the tied classes
+            sc[t] = (
+                sum(passed(rs[i]) for i in majority)
+                / len(majority)
+                if majority
+                else 0.0
+            )
             agree[t] = agreement
     if sc:
         s["sc_acc"] = sum(sc.values()) / len(sc)
@@ -87,17 +93,16 @@ def summarize(tasks, per_task):
     s["by_kind"] = {
         k: sum(v) / len(v) for k, v in sorted(kinds.items())
     }
-    chain = [
-        r for r in samples if passed(r) and "chain_break" in r
-    ]
-    breaks = Counter(
-        r["chain_break"][1] for r in chain if r["chain_break"]
+    s["inconclusive"] = sum(
+        r["verdict"]["status"] == "inconclusive" for r in samples
     )
-    s["right_answer_chain"] = {
-        "checked": len(chain),
-        "invalid-step": breaks["not-equal"],
-        "steps-not-expressions": breaks["unreadable"],
-    }
+    s["right_answer_chain"] = dict(
+        Counter(
+            r["chain"][0]
+            for r in samples
+            if passed(r) and "chain" in r
+        )
+    )
     pairs = defaultdict(dict)
     for t, a in acc.items():
         if "pair" in by_id[t]:
@@ -193,7 +198,8 @@ def main(argv=None):
             f"## {m}",
             "",
             f"- tasks {s['tasks']}, samples {s['samples']}, "
-            f"model errors {s['errors']}",
+            f"model errors {s['errors']}, "
+            f"inconclusive {s['inconclusive']}",
             f"- by kind: "
             + ", ".join(
                 f"{k} {100 * v:.0f}%"

@@ -9,7 +9,7 @@ from . import __version__
 from .checks import Verdict, check, check_chain
 from .families import generate
 from .models import ModelError, make_client, request_key
-from .parse import extract_json
+from .parse import extract_json, normalize
 from .prompts import PROMPT_VERSION, build_messages, prompt_sha
 
 
@@ -62,9 +62,10 @@ def grade(task, rec):
         valid_json=valid_json,
         verdict=verdict.as_dict(),
     )
-    steps = (parsed or {}).get("steps")
-    if task.get("chain") and isinstance(steps, list):
-        rec["chain_break"] = check_chain(task, steps)
+    if task.get("chain") and verdict.status in ("pass", "fail"):
+        steps = parsed.get("steps")
+        final = normalize(parsed["final_answer"])
+        rec["chain"] = check_chain(task, steps, final)
     return rec
 
 
@@ -92,6 +93,7 @@ def regrade(paths, by_id, out, models=None):
                     "parsed",
                     "valid_json",
                     "verdict",
+                    "chain",
                     "chain_break",
                 ):
                     rec.pop(field, None)

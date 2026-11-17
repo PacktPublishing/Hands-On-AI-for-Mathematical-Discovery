@@ -21,6 +21,7 @@ answers = [
         {"final_answer": "false", "witness": "(2, 2, 8)"},
     ),
     ("cex-goldbach", {"final_answer": "4"}),
+    ("cex-collatz", {"final_answer": "27"}),
     ("ref-rh-2026", {"final_answer": "arXiv:2610.04512"}),
 ]
 for task_id, answer in answers:
@@ -30,9 +31,8 @@ for task_id, answer in answers:
         print(f"    {v.detail}")
 
 steps = ["(x**2)**(1/2)", "x"]
-print(
-    "first broken step:", check_chain(tasks["exp-sqrt-sq"], steps)
-)
+chain = check_chain(tasks["exp-sqrt-sq"], steps, final="x")
+print("step chain:", chain)
 
 samples = [
     {"final_answer": a}

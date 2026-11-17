@@ -109,11 +109,55 @@ class TestChecks(unittest.TestCase):
 
     def test_chain(self):
         t = TASKS["exp-sqrt-sq"]
+        chain = lambda steps, final: check_chain(t, steps, final)
         self.assertEqual(
-            check_chain(t, ["(x**2)**(1/2)", "x"]),
-            (2, "not-equal"),
+            chain(["(x**2)**(1/2)", "x"], "x"), ("not-equal", 2)
         )
-        self.assertIsNone(check_chain(t, ["Abs(x)"]))
+        self.assertEqual(
+            chain(["Abs(x)"], "Abs(x)"), ("complete", None)
+        )
+        self.assertEqual(
+            chain([], "Abs(x)"), ("not-checked", None)
+        )
+        self.assertEqual(
+            chain(None, "Abs(x)"), ("not-checked", None)
+        )
+        self.assertEqual(
+            chain(["|x|"], "Abs(x)"), ("unreadable", 1)
+        )
+        self.assertEqual(chain(["Abs(x)"], "x"), ("wrong-end", 2))
+
+    def test_removable_singularity_is_not_equal(self):
+        task = dict(TASKS["exp-rational"], domain={"x": "real"})
+        v = check(task, {"final_answer": "(x**2 - 1)/(x - 1)"})
+        self.assertEqual(v.status, "fail")
+        self.assertIn("'x': '1'", v.detail)
+        v = check(task, {"final_answer": "x + 1"})
+        self.assertEqual(v.status, "pass")
+
+    def test_open_problems(self):
+        cases = [
+            ("cex-goldbach", "4", "fail", "4 = 2 + 2"),
+            ("cex-goldbach", "7", "fail", "not an even integer"),
+            ("cex-collatz", "27", "fail", "after 111 steps"),
+        ]
+        for tid, answer, status, text in cases:
+            v = check(TASKS[tid], {"final_answer": answer})
+            self.assertEqual(v.status, status, tid)
+            self.assertIn(text, v.detail, tid)
+
+    def test_undecided_candidate_is_inconclusive(self):
+        from harness import checks
+
+        undecided = {"collatz_divergent": lambda n: None}
+        original, checks.REFUTERS = checks.REFUTERS, undecided
+        try:
+            v = check(
+                TASKS["cex-collatz"], {"final_answer": "27"}
+            )
+        finally:
+            checks.REFUTERS = original
+        self.assertEqual(v.status, "inconclusive")
 
     def test_ids(self):
         self.assertEqual(
@@ -134,9 +178,42 @@ class TestConsistency(unittest.TestCase):
             {"final_answer": "pi/4"},
             None,
         ]
-        winner, agreement = vote(task, answers)
-        self.assertEqual(winner, 0)
+        majority, agreement = vote(task, answers)
+        self.assertEqual(majority, [0])
         self.assertEqual(agreement, 0.5)
+
+    def test_antiderivatives_up_to_a_constant(self):
+        task = {
+            "kind": "antiderivative",
+            "variable": "x",
+            "domain": {"x": "real"},
+            "integrand": "2*x",
+            "answer": "x**2",
+        }
+        answers = [
+            {"final_answer": f} for f in ("x**2", "x**2 + 1")
+        ]
+        self.assertEqual(vote(task, answers), ([0], 1.0))
+
+    def test_tie_counts_half(self):
+        task = TASKS["val-quartic"]
+        answers = [
+            {"final_answer": a}
+            for a in (
+                "pi*sqrt(2)/4",
+                "pi/4",
+                "pi/(2*sqrt(2))",
+                "pi/4",
+                "1",
+            )
+        ]
+        self.assertEqual(vote(task, answers), ([0, 1], 0.4))
+        recs = [
+            {"parsed": a, "verdict": check(task, a).as_dict()}
+            for a in answers
+        ]
+        stats = summarize([task], {task["id"]: recs})
+        self.assertEqual(stats["sc_acc"], 0.5)
 
 
 class TestStatistics(unittest.TestCase):

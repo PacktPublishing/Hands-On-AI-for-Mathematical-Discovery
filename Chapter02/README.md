@@ -46,7 +46,7 @@ python3 -m harness.report runs/regraded
 | `runs/2026-11-15-gpt-oss-120b-vllm/` | `openai/gpt-oss-120b`, vLLM 0.33.0, one 96 GB RTX PRO 6000 Blackwell, 5 samples per task. Graded with harness 2.0.0; `report.md` includes the `--resolve` check. |
 | `runs/2026-11-15-qwen3-vllm/` | `Qwen/Qwen3-32B`, same setup and grading; `report.md` includes the `--resolve` check. |
 | `runs/2026-11-15-qwen3-4b-vllm/` | `Qwen/Qwen3-4B`, same setup and grading. |
-| `runs/2026-11-15-regraded/` | All three runs re-graded from the recordings with harness 2.2.0, which accepts `//`, `comb`, and `catalan` and classifies "none" answers. These are the numbers in the chapter. |
+| `runs/2026-11-15-regraded/` | All three runs re-graded from the recordings with harness 2.3.0. Compared with the original grading, it accepts `//`, `comb`, and `catalan`, classifies "none" answers, checks where an answer is undefined, refutes candidates for open problems, groups antiderivatives up to a constant, counts ties in `maj@k` as a random pick, and reports step chains as complete, not-equal, unreadable, wrong-end, or not-checked. These are the numbers in the chapter. |
 
 The runs were computed on the Research Computing Infrastructure of EDIH Hamburg
 (SLURM, GPU partition with NVIDIA L40 and RTX PRO 6000 Blackwell nodes), one 96 GB
