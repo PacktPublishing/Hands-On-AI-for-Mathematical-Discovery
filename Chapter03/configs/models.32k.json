@@ -1,0 +1,52 @@
+{
+  "models": [
+    {
+      "name": "gpt-oss-120b-vllm",
+      "note": "Cluster: TOOL_ARGS='--tool-call-parser openai'",
+      "base_url": "http://localhost:8000/v1",
+      "model": "openai/gpt-oss-120b",
+      "per_sample_seed": true,
+      "params": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "max_tokens": 32768
+      }
+    },
+    {
+      "name": "qwen3-32b-vllm",
+      "note": "Cluster: TOOL_ARGS='--tool-call-parser hermes --reasoning-parser qwen3'",
+      "base_url": "http://localhost:8000/v1",
+      "model": "Qwen/Qwen3-32B",
+      "per_sample_seed": true,
+      "params": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "max_tokens": 32768
+      }
+    },
+    {
+      "name": "qwen3-4b-vllm",
+      "note": "Cluster: TOOL_ARGS='--tool-call-parser hermes --reasoning-parser qwen3'",
+      "base_url": "http://localhost:8000/v1",
+      "model": "Qwen/Qwen3-4B",
+      "per_sample_seed": true,
+      "params": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "max_tokens": 32768
+      }
+    },
+    {
+      "name": "qwen3-4b-ollama",
+      "note": "Laptop: OLLAMA_CONTEXT_LENGTH=32768 ollama serve",
+      "base_url": "http://localhost:11434/v1",
+      "model": "qwen3:4b",
+      "per_sample_seed": true,
+      "params": {
+        "temperature": 0.6,
+        "top_p": 0.95,
+        "max_tokens": 32768
+      }
+    }
+  ]
+}

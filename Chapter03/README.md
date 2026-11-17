@@ -15,13 +15,14 @@ result, and logs it.
 | `mathtools/symbolic.py` | SymPy derivation of the cycle formula |
 | `mathtools/numeric.py` | Continued fractions of log2(q) with mpmath, and the float comparison |
 | `mathtools/validate.py`, `registry.py` | Argument checks and the tool gateway |
-| `mathtools/tools.py` | The six tools a model may call |
+| `mathtools/tools.py` | The eight tools a model may call |
 | `mathtools/client.py`, `loop.py` | OpenAI-compatible client with tool calls; the inner loop |
 | `mathtools/experiment.py`, `report.py` | 28 tasks with and without tools; the report |
 | `examples/` | The demos printed in the chapter |
-| `configs/models.example.json` | Model endpoints (vLLM on a cluster, Ollama on a laptop) |
+| `configs/models.example.json` | Model endpoints (vLLM on a cluster, Ollama on a laptop), 8,192 tokens per reply |
+| `configs/models.32k.json` | The same endpoints with 32,768 tokens per reply |
 | `slurm/tools_vllm.sbatch` | Serves a model with tool calling and runs the experiment |
-| `runs/` | Recorded runs: every conversation, tool call, and verdict |
+| `runs/` | Recorded runs: every conversation, tool call, and verdict (Table 3.2) |
 
 The listings in the chapter are taken verbatim from these files.
 
@@ -67,8 +68,25 @@ MODEL=Qwen/Qwen3-32B NAME=qwen3-32b-vllm \
     sbatch slurm/tools_vllm.sbatch
 ```
 
+The second run of the chapter repeats the mode without tools with
+32,768 tokens per reply; Qwen3-32B then needs two GPUs:
+
+```bash
+CONFIG=configs/models.32k.json EXP_ARGS="--modes plain" \
+    RUN=runs/2026-11-16-qwen3-32b-vllm-plain32k \
+    MODEL=Qwen/Qwen3-32B NAME=qwen3-32b-vllm \
+    TOOL_ARGS="--tool-call-parser hermes --reasoning-parser qwen3 --tensor-parallel-size 2" \
+    sbatch --gres=gpu:2 slurm/tools_vllm.sbatch
+```
+
 Runs are resumable: start the same command again and only missing
-conversations are run. To read one conversation:
+conversations are run. To recompute Table 3.2 from the recorded runs:
+
+```bash
+python examples/compare_budgets.py
+```
+
+To read one conversation:
 
 ```bash
 python examples/show_transcript.py runs/<run> <model> <task-id>

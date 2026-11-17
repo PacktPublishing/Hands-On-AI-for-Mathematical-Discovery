@@ -14,9 +14,11 @@ export PYTHONUNBUFFERED=1
 MODEL=${MODEL:-openai/gpt-oss-120b}     # Hugging Face repository
 NAME=${NAME:-gpt-oss-120b-vllm}         # entry in the config
 CONFIG=${CONFIG:-configs/models.example.json}
-# gpt-oss: --tool-call-parser openai
-# Qwen3:   --tool-call-parser hermes --reasoning-parser qwen3
+# Extra vLLM arguments. gpt-oss: --tool-call-parser openai
+# Qwen3: --tool-call-parser hermes --reasoning-parser qwen3
+# Two GPUs: add --tensor-parallel-size 2 (and request two GPUs)
 TOOL_ARGS=${TOOL_ARGS:---tool-call-parser openai}
+EXP_ARGS=${EXP_ARGS:-}                  # e.g. --modes plain
 PORT=${PORT:-8000}
 RUN=${RUN:-runs/$(date +%Y-%m-%d)-$NAME}
 mkdir -p logs "$RUN"
@@ -38,5 +40,5 @@ until curl -sf "http://localhost:$PORT/v1/models" > /dev/null; do
 done
 
 python -m mathtools.experiment --config "$CONFIG" --models "$NAME" \
-    --samples 3 --workers 8 --out "$RUN"
+    --samples 3 --workers 8 --out "$RUN" $EXP_ARGS
 python -m mathtools.report "$RUN"

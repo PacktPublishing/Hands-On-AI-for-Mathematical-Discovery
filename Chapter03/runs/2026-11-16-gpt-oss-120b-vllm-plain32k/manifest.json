@@ -1,0 +1,24 @@
+{
+  "mathtools": "3.0.0",
+  "tasks": 28,
+  "samples": 3,
+  "seed": 0,
+  "max_rounds": 10,
+  "modes": [
+    "plain"
+  ],
+  "models": [
+    {
+      "name": "gpt-oss-120b-vllm",
+      "note": "Cluster: TOOL_ARGS='--tool-call-parser openai'",
+      "base_url": "http://localhost:8000/v1",
+      "model": "openai/gpt-oss-120b",
+      "per_sample_seed": true,
+      "params": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "max_tokens": 32768
+      }
+    }
+  ]
+}
